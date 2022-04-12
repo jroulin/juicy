@@ -2,6 +2,8 @@
 '''
 '''
 
+import sys
+
 
 def invest_flash(amount):
     # 50 € for 4 months => 68 euros
@@ -23,18 +25,52 @@ def invest_haze(amount):
     return invest(amount, 2000, 5, 2, 900)
 
 
-def invest(amount, cost, duration, harvest_per_year, revenue):
-    lots = amount // cost
-    remains = amount % cost
-    table = []
-    max = round(12 * duration)
-    for idx in range(1, max+1):
-        if idx == 1:
-            table.append(remains)
-        elif idx != 0 and (idx % (12 / harvest_per_year) == 0 or idx == max):
+def invest(amount, cost_per_lot, duration, harvest_per_year, revenue):
+    lots = amount // cost_per_lot
+    remains = amount % cost_per_lot
+    table = [remains]
+    last = round(12 * duration)
+    for idx in range(2, last + 1):
+        if idx % (12 / harvest_per_year) == 0 or idx == last:
             table.append(lots * revenue)
         else:
             table.append(0)
-    return table
+    return table, lots * cost_per_lot
+
+
+def merge_arrays(store, idx, extra):
+    for loop in range(len(extra)):
+        try:
+            store[idx + loop] += extra[loop]
+        except IndexError:
+            store.append(extra[loop])
+    return store
+
+
+def re_invest(amount, duration):
+    res, remains = invest_haze(amount)
+    cash = amount - remains
+    current = range(len(res))
+    for idx in current:
+        cash += res[idx]
+        present = res[:idx + 1]
+        if cash >= 2000:
+            boost = invest_haze(cash)
+            print("reinvesting  haze month %02d: %05d €" % (idx + 1, cash), file=sys.stderr)
+            cash -= boost[1]
+            res[idx] = 0
+            merge_arrays(res, idx, boost[0])
+        if cash >= 50:
+            boost = invest_flash(cash)
+            print("reinvesting flash month %02d: %05d €" % (idx + 1, cash), file=sys.stderr)
+            cash -= boost[1]
+            res[idx] = 0
+            merge_arrays(res, idx, boost[0])
+    return res
+
+if __name__ == "__main__":
+    res = re_invest(int(sys.argv[1]), int(sys.argv[2]))
+    print("sum = %d €" % sum(res))
+    print(res)
 
 # juicy.py ends here
