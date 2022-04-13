@@ -31,8 +31,8 @@ class TestJuicy(unittest.TestCase):
 
     def test_re_invest(self):
         years = 5
-        res = re_invest(4000, years)
-        self.assertEqual(sum(res), 294766)
+        res = re_invest(years, [4000])
+        self.assertEqual(sum(res), 2630578)
 
     def test_merge_arrays(self):
         res = [10, 10, 10]
